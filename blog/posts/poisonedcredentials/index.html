@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PoisonedCredentials — Keenan Morrison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/blog.css" />
+</head>
+<body>
+<nav><div class="nav">
+  <a class="brand" href="/">Keenan Morrison</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/blog/" class="here">Blog</a><a href="/#projects">Projects</a><a href="/#about">About</a></div>
+  <div class="nav-search"><span class="ns-ico">&#9906;</span><input id="navsearch" type="search" placeholder="Search" autocomplete="off" /></div>
+  <button class="toggle" id="toggle" aria-label="Toggle theme">&#9790;</button>
+</div></nav>
+<div class="wrap post">
+  <a class="back" href="/blog/">&larr; All writeups</a>
+  <header class="post-head">
+    <div class="post-meta">
+      <span class="src">LetsDefend</span>
+      <span class="dot">&middot;</span><span>Easy</span>
+      <span class="dot">&middot;</span><span>2026-07-29</span>
+      <span class="dot">&middot;</span><span>2 min read</span>
+    </div>
+    <h1>PoisonedCredentials</h1>
+    <div class="tags"><a class="tag" href="/blog/?tag=network">network</a><a class="tag" href="/blog/?tag=wireshark">wireshark</a><a class="tag" href="/blog/?tag=llmnr">llmnr</a></div>
+  </header>
+  <article class="prose">
+<table>
+<thead>
+<tr>
+<th>Victim</th>
+<th>192.168.232.162</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Attacker</td>
+<td>192.168.232.215</td>
+</tr>
+</tbody>
+</table>
+<p>In the context of the incident described in the scenario, the attacker initiated their actions by taking advantage of benign network traffic from legitimate machines. Can you identify the specific mistyped query made by the machine with the IP address 192.168.232.162?</p>
+<p>LLMNR and NBT-NS are protocols used to resolve names when DNS is unavailable and as aresult is susceptible to MITM attacks</p>
+<p>I asked to identify the specific mistyped query made by 192.168.232.162 so I used the filter <code>llmnr and ip.src == 192.168.232.162</code> to make it alot easier and find llmnr queries from this IP</p>
+<p>In this screenshot you can see that at the end of each packet it contains <code>fileshaare</code>  which seems to be misspelled.
+<img src="img/Pasted%20image%2020260729002208.png" alt=""></p>
+<hr>
+<p>Q2</p>
+<p>We are investigating a network security incident. To conduct a thorough investigation, We need to determine the IP address of the rogue machine. What is the IP address of the machine acting as the rogue entity?</p>
+<p>Answer : <code>192.168.232.215</code></p>
+<p><code>192.168.232.215</code> is the rogue host because it repeatedly sent LLMNR query responses claiming to be <code>fileshaare</code> to the victim <code>192.168.232.162</code>, which is an indicator of LLMNR poisoning</p>
+<p><img src="img/Pasted%20image%2020260729003528.png" alt=""></p>
+<hr>
+<p>Q3</p>
+<p>As part of our investigation, identifying all affected machines is essential. What is the IP address of the second machine that received poisoned responses from the rogue machine?</p>
+<p>Answer : <code> 192.168.232.176</code></p>
+<p>I found this out by looking for llmnr responses from the attacker IP I found from the last question using this filter <code>ip.src == 192.168.232.215 and llmnr</code>. Then I was able to see that the attacker was able to poison <code>192.168.232.176</code> by taking advantage of the victim trying to resolve <code>prinetr</code></p>
+<p><img src="img/Pasted%20image%2020260729003917.png" alt=""></p>
+<hr>
+<p>Q4</p>
+<p>We suspect that user accounts may have been compromised. To assess this, we must determine the username associated with the compromised account. What is the username of the account that the attacker compromised?</p>
+<p>Now I need to find the username of the account that got compromised and I will do this by filtering for NTLM authentication data using `ntlmssp.auth.username</p>
+<p>After applying this filter I saw that the victim <code>.176</code> authenticated to the attacker since it was poisoned and send its credentials as <code>janesmith</code></p>
+<p><img src="img/Pasted%20image%2020260729004829.png" alt=""></p>
+<hr>
+<p>Q5</p>
+<p>As part of our investigation, we aim to understand the extent of the attacker's activities. What is the hostname of the machine that the attacker accessed via SMB?</p>
+<p>I looked for NTLM</p>
+<p><img src="img/Pasted%20image%2020260729010027.png" alt=""></p>
+
+  </article>
+</div>
+<footer><div class="wrap">&copy; <span id="yr"></span> Keenan Morrison</div></footer>
+<script>
+  const r = document.documentElement;
+  const s = localStorage.getItem('theme'); if (s) r.setAttribute('data-theme', s);
+  const t = document.getElementById('toggle');
+  if (t) t.onclick = () => { const n = r.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+  const y = document.getElementById('yr'); if (y) y.textContent = new Date().getFullYear();
+</script>
+<script src="../../assets/blog-search.js"></script>
+</body>
+</html>

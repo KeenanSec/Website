@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AWSRaid — Keenan Morrison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/blog.css" />
+</head>
+<body>
+<nav><div class="nav">
+  <a class="brand" href="/">Keenan Morrison</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/blog/" class="here">Blog</a><a href="/#projects">Projects</a><a href="/#about">About</a></div>
+  <div class="nav-search"><span class="ns-ico">&#9906;</span><input id="navsearch" type="search" placeholder="Search" autocomplete="off" /></div>
+  <button class="toggle" id="toggle" aria-label="Toggle theme">&#9790;</button>
+</div></nav>
+<div class="wrap post">
+  <a class="back" href="/blog/">&larr; All writeups</a>
+  <header class="post-head">
+    <div class="post-meta">
+      <span class="src">CyberDefenders</span>
+      <span class="dot">&middot;</span><span>Medium</span>
+      <span class="dot">&middot;</span><span>2026-07-28</span>
+      <span class="dot">&middot;</span><span>5 min read</span>
+    </div>
+    <h1>AWSRaid</h1>
+    <div class="tags"><a class="tag" href="/blog/?tag=cloud">cloud</a><a class="tag" href="/blog/?tag=aws">aws</a><a class="tag" href="/blog/?tag=splunk">splunk</a></div>
+  </header>
+  <article class="prose">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Compromised Account</td>
+<td><code>helpdesk.luke</code></td>
+</tr>
+<tr>
+<td>Attacker ARN</td>
+<td><code>arn:aws:iam::141573590337:user/helpdesk.luke</code></td>
+</tr>
+<tr>
+<td>AWS Account ID</td>
+<td><code>141573590337</code></td>
+</tr>
+<tr>
+<td>Attacker-Created Account</td>
+<td><code>marketing.mark</code> (added to <code>Admins</code>)</td>
+</tr>
+<tr>
+<td>Data Source</td>
+<td>AWS CloudTrail via Splunk</td>
+</tr>
+<tr>
+<td>Activity Window</td>
+<td>2023-11-02 ~09:55 to 09:59 UTC</td>
+</tr>
+<tr>
+<td>Key File Stolen</td>
+<td><code>Product2_CAD_Designs.dwg</code></td>
+</tr>
+</tbody>
+</table>
+<h2>Executive Summary</h2>
+<p>An external actor brute-forced the <code>helpdesk.luke</code> IAM user, producing 10 failed console logins before gaining access. Using those valid credentials the attacker collected 8 objects from 7 S3 buckets in under two minutes, including a secrets vault dump, customer data backups, and proprietary CAD designs. They then disabled S3 Block Public Access on <code>backup-and-restore98825501</code>, created a backdoor IAM user (<code>marketing.mark</code>) with console access, and escalated it into the <code>Admins</code> group. The entire kill chain (initial access through privilege escalation) completed in roughly four minutes.</p>
+<h2>Attack Timeline</h2>
+<table>
+<thead>
+<tr>
+<th>Time (UTC)</th>
+<th>Action</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pre-09:55</td>
+<td>Brute force</td>
+<td>10 failed console logins against <code>helpdesk.luke</code></td>
+</tr>
+<tr>
+<td>09:55:53</td>
+<td>Collection begins</td>
+<td>First <code>GetObject</code>: <code>prototype.obj</code> (<code>research-project-files23411723</code>)</td>
+</tr>
+<tr>
+<td>09:55:53 - 09:57:11</td>
+<td>Bulk data access</td>
+<td>8 objects pulled across 7 buckets</td>
+</tr>
+<tr>
+<td>09:58:01</td>
+<td>Weaken controls</td>
+<td><code>PutBucketPublicAccessBlock</code> on <code>backup-and-restore98825501</code></td>
+</tr>
+<tr>
+<td>09:59:33</td>
+<td>Persistence</td>
+<td><code>CreateUser</code> <code>marketing.mark</code></td>
+</tr>
+<tr>
+<td>09:59:38</td>
+<td>Persistence</td>
+<td><code>CreateLoginProfile</code> for <code>marketing.mark</code></td>
+</tr>
+<tr>
+<td>09:59:38</td>
+<td>Privilege escalation</td>
+<td><code>AddUserToGroup</code>: <code>marketing.mark</code> to <code>Admins</code></td>
+</tr>
+</tbody>
+</table>
+<h2>MITRE ATT&amp;CK Mapping</h2>
+<table>
+<thead>
+<tr>
+<th>Tactic</th>
+<th>Technique</th>
+<th>ID</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Credential Access</td>
+<td>Brute Force</td>
+<td>T1110</td>
+<td>10 failed console logins for <code>helpdesk.luke</code></td>
+</tr>
+<tr>
+<td>Initial Access</td>
+<td>Valid Accounts: Cloud Accounts</td>
+<td>T1078.004</td>
+<td>Successful auth after brute force; all actions run as <code>helpdesk.luke</code></td>
+</tr>
+<tr>
+<td>Collection</td>
+<td>Data from Cloud Storage</td>
+<td>T1530</td>
+<td>8 <code>GetObject</code> calls across 7 buckets</td>
+</tr>
+<tr>
+<td>Defense Evasion</td>
+<td>Impair Defenses: Disable or Modify Cloud Firewall</td>
+<td>T1562.007</td>
+<td><code>PutBucketPublicAccessBlock</code> on <code>backup-and-restore98825501</code> (closest cloud fit for disabling S3 Block Public Access)</td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>Create Account: Cloud Account</td>
+<td>T1136.003</td>
+<td><code>CreateUser</code> <code>marketing.mark</code></td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>Account Manipulation</td>
+<td>T1098</td>
+<td><code>CreateLoginProfile</code> for <code>marketing.mark</code></td>
+</tr>
+<tr>
+<td>Privilege Escalation</td>
+<td>Account Manipulation</td>
+<td>T1098</td>
+<td><code>AddUserToGroup</code>: <code>marketing.mark</code> to <code>Admins</code></td>
+</tr>
+</tbody>
+</table>
+<h2>Indicators &amp; Affected Assets</h2>
+<p><strong>Identities</strong></p>
+<ul>
+<li>Compromised: <code>helpdesk.luke</code> (<code>arn:aws:iam::141573590337:user/helpdesk.luke</code>)</li>
+<li>Attacker-created backdoor: <code>marketing.mark</code> (member of <code>Admins</code>)</li>
+</ul>
+<p><strong>Buckets accessed (all via <code>helpdesk.luke</code>)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Bucket</th>
+<th>Object</th>
+<th>Sensitivity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>research-project-files23411723</code></td>
+<td><code>prototype.obj</code></td>
+<td>R&amp;D</td>
+</tr>
+<tr>
+<td><code>backup-and-restore98825501</code></td>
+<td><code>secrets_vault_dump.bak</code>, <code>Configuration_Backup_Server2.zip</code></td>
+<td>Critical (public access later disabled)</td>
+</tr>
+<tr>
+<td><code>product-designs-repository31183937</code></td>
+<td><code>Product2_CAD_Designs.dwg</code></td>
+<td>Proprietary IP</td>
+</tr>
+<tr>
+<td><code>contracts-data67988444</code></td>
+<td><code>Contract_Termination_Letter_Client.pdf</code></td>
+<td>Legal</td>
+</tr>
+<tr>
+<td><code>customer-data-backup57893984</code></td>
+<td><code>CustomerData_Backup_2023-11-01.zip</code></td>
+<td>Customer PII</td>
+</tr>
+<tr>
+<td><code>legal-docs45020393</code></td>
+<td><code>Contract_Agreement.pdf</code></td>
+<td>Legal</td>
+</tr>
+<tr>
+<td><code>marketing-assets-vault27512203</code></td>
+<td><code>logo.png</code></td>
+<td>Low</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>Investigation</h2>
+<h3>Q1 - Compromised user account</h3>
+<p><strong>Answer:</strong> <code>helpdesk.luke</code> <em>(Credential Access - T1110)</em></p>
+<p>Counted failed console authentications per user from CloudTrail sign-in events, sorted descending.</p>
+<pre class="hl"><code>index=&quot;aws_cloudtrail&quot; eventSource=&quot;signin.amazonaws.com&quot; errorMessage=&quot;Failed authentication&quot; | stats count by userIdentity.userName | sort -count
+</code></pre>
+<p><code>helpdesk.luke</code> had 10 failed attempts, well above the next user (<code>devops.ethan</code>, 3), consistent with a targeted brute force that eventually succeeded.</p>
+<p><img src="img/Pasted%20image%2020260728175204.png" alt=""></p>
+<h3>Q2 - First S3 object access</h3>
+<p><strong>Answer:</strong> <code>2023-11-02 09:55:53</code> <em>(Collection - T1530)</em></p>
+<p>Listed every S3 object touched by <code>helpdesk.luke</code>, with time, action, bucket, and key.</p>
+<pre class="hl"><code>index=&quot;aws_cloudtrail&quot; &quot;userIdentity.userName&quot;=&quot;helpdesk.luke&quot; eventSource=&quot;s3.amazonaws.com&quot; eventName=&quot;GetObject&quot; | table _time, eventName, requestParameters.bucketName, requestParameters.key
+</code></pre>
+<p>The earliest <code>GetObject</code> was <code>prototype.obj</code> at 09:55:53. In total 8 objects were pulled from 7 buckets within 78 seconds, indicating scripted bulk collection rather than manual browsing.</p>
+<p><img src="img/Pasted%20image%2020260728180720.png" alt=""></p>
+<h3>Q3 - Bucket containing the DWG file</h3>
+<p><strong>Answer:</strong> <code>product-designs-repository31183937</code> <em>(Collection - T1530)</em></p>
+<p>Same query as Q2, filtered to <code>.dwg</code> (AutoCAD drawing format).</p>
+<pre class="hl"><code>index=&quot;aws_cloudtrail&quot; &quot;userIdentity.userName&quot;=&quot;helpdesk.luke&quot; eventSource=&quot;s3.amazonaws.com&quot; eventName=&quot;GetObject&quot; &quot;*.dwg&quot; | table _time, requestParameters.bucketName, requestParameters.key
+</code></pre>
+<p>One hit: <code>Product2_CAD_Designs.dwg</code> in <code>product-designs-repository31183937</code> at 09:56:07. Proprietary engineering IP, no legitimate reason for a helpdesk account to read it.</p>
+<p><img src="img/Pasted%20image%2020260728182141.png" alt=""></p>
+<h3>Q4 - Bucket configured for public access</h3>
+<p><strong>Answer:</strong> <code>backup-and-restore98825501</code> <em>(Defense Evasion - T1562.007)</em></p>
+<p>Searched for public-access-block changes, including the full ARN to confirm identity.</p>
+<pre class="hl"><code>index=&quot;aws_cloudtrail&quot; &quot;userIdentity.userName&quot;=&quot;helpdesk.luke&quot; eventName=&quot;PutBucketPublicAccessBlock&quot; | table _time, requestParameters.bucketName, userIdentity.arn
+</code></pre>
+<p>At 09:58:01, <code>helpdesk.luke</code> (<code>arn:aws:iam::141573590337:user/helpdesk.luke</code>) modified Block Public Access on <code>backup-and-restore98825501</code>. Note: the attacker had already pulled <code>secrets_vault_dump.bak</code> and <code>Configuration_Backup_Server2.zip</code> from this bucket at 09:57 using valid credentials, so disabling the block was not required for their own access. It reads as broad public exposure or staging for a second party rather than a step in Luke's own exfil.</p>
+<p><img src="img/Pasted%20image%2020260728183538.png" alt=""></p>
+<h3>Q5 - Attacker-created account</h3>
+<p><strong>Answer:</strong> <code>marketing.mark</code> <em>(Persistence - T1136.003, T1098)</em></p>
+<p>Looked for IAM user creation and console login setup by <code>helpdesk.luke</code>. <code>CreateUser</code> alone yields a user with no password, so <code>CreateLoginProfile</code> is what enables interactive console sign-in.</p>
+<pre class="hl"><code>index=&quot;aws_cloudtrail&quot; &quot;userIdentity.userName&quot;=&quot;helpdesk.luke&quot; eventCategory=&quot;Management&quot; | search eventName=&quot;CreateUser&quot; OR eventName=&quot;CreateLoginProfile&quot; | table _time, eventName, requestParameters.userName
+</code></pre>
+<p><code>marketing.mark</code> was created at 09:59:33 and given a console login profile at 09:59:38. The login profile signals intent for hands-on-keyboard access, not just API keys.</p>
+<p><img src="img/Pasted%20image%2020260728184610.png" alt=""></p>
+<h3>Q6 - Group the account was added to</h3>
+<p><strong>Answer:</strong> <code>Admins</code> <em>(Privilege Escalation - T1098)</em></p>
+<p>Queried all <code>AddUserToGroup</code> events account-wide (deliberately not scoped to Luke, since escalation could target any identity).</p>
+<pre class="hl"><code>index=&quot;aws_cloudtrail&quot; eventName=&quot;AddUserToGroup&quot; | table _time, requestParameters.groupName, requestParameters.userName
+</code></pre>
+<p>Single result: <code>marketing.mark</code> added to <code>Admins</code> at 09:59:38. This is the escalation that turns the backdoor account from powerless into full administrator. The wide query returned only this one event, confirming the blast radius is a single created account.</p>
+<p><img src="img/Pasted%20image%2020260728185116.png" alt=""></p>
+<hr>
+<h2>Lessons Learned</h2>
+<p>Each item maps to a control gap the attacker exploited in this incident.</p>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Impact in this incident</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No evidence of MFA on console logins</td>
+<td>Password brute force alone granted full access</td>
+<td>Enforce MFA on all IAM users via SCP</td>
+</tr>
+<tr>
+<td>No alerting on failed-auth volume</td>
+<td>10 failed logins went unnoticed before the breach</td>
+<td>GuardDuty / CloudWatch alarm on repeated <code>ConsoleLogin</code> failures per user</td>
+</tr>
+<tr>
+<td>Over-permissioned helpdesk account</td>
+<td>One account read 7 buckets of secrets, PII, contracts, and CAD IP</td>
+<td>Scope IAM policies to least privilege; helpdesk should not reach data buckets</td>
+</tr>
+<tr>
+<td>Unmonitored IAM changes</td>
+<td>Backdoor admin created and escalated in seconds</td>
+<td>Alert on <code>CreateUser</code>, <code>CreateLoginProfile</code>, <code>AddUserToGroup</code>; SCP-gate <code>Admins</code> membership</td>
+</tr>
+<tr>
+<td>Mutable public-access controls</td>
+<td>Critical bucket exposed by a non-admin user</td>
+<td>SCP denying <code>PutBucketPublicAccessBlock</code> except a designated break-glass role</td>
+</tr>
+</tbody>
+</table>
+<h2>Containment / remediation</h2>
+<ul>
+<li>Disable <code>helpdesk.luke</code>, force password rotation, revoke active sessions.</li>
+<li>Delete <code>marketing.mark</code> and remove it from <code>Admins</code>.</li>
+<li>Re-enable Block Public Access on <code>backup-and-restore98825501</code> and audit whether the bucket was reached publicly during the exposure window.</li>
+<li>Treat <code>secrets_vault_dump.bak</code>, customer data, and CAD IP as confirmed exfiltrated; rotate any credentials in the secrets dump.</li>
+</ul>
+
+  </article>
+</div>
+<footer><div class="wrap">&copy; <span id="yr"></span> Keenan Morrison</div></footer>
+<script>
+  const r = document.documentElement;
+  const s = localStorage.getItem('theme'); if (s) r.setAttribute('data-theme', s);
+  const t = document.getElementById('toggle');
+  if (t) t.onclick = () => { const n = r.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+  const y = document.getElementById('yr'); if (y) y.textContent = new Date().getFullYear();
+</script>
+<script src="../../assets/blog-search.js"></script>
+</body>
+</html>

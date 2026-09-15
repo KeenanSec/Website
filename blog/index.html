@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Writeups — Keenan Morrison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./assets/blog.css" />
+</head>
+<body>
+<nav><div class="nav">
+  <a class="brand" href="/">Keenan Morrison</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/blog/" class="here">Blog</a><a href="/#projects">Projects</a><a href="/#about">About</a></div>
+  <div class="nav-search"><span class="ns-ico">&#9906;</span><input id="navsearch" type="search" placeholder="Search" autocomplete="off" /></div>
+  <button class="toggle" id="toggle" aria-label="Toggle theme">&#9790;</button>
+</div></nav>
+<div class="wrap">
+  <header class="blog-head">
+    <div class="sec-title"></div>
+    <h1>Writeups</h1>
+    <p>DFIR, malware analysis, memory forensics, and network investigations from CyberDefenders, LetsDefend, TryHackMe, and Hack The Box.</p>
+  </header>
+  <div class="filter">
+    <div class="search-row">
+      <div class="search-wrap"><span class="s-ico">&#9906;</span><input id="search" type="search" placeholder="Search" autocomplete="off" /></div>
+      <div class="filters">
+        <span class="f-label"><span class="f-ico">&#9660;</span>Filters:</span>
+        <div class="dd" data-group="platform"><button class="dd-btn">Platform<span class="dd-count"></span> <span class="caret">&#9662;</span></button><div class="dd-menu"><label><input type="checkbox" value="cyberdefenders">CyberDefenders</label><label><input type="checkbox" value="letsdefend">LetsDefend</label><label><input type="checkbox" value="tryhackme">TryHackMe</label></div></div>
+        <div class="dd" data-group="difficulty"><button class="dd-btn">Difficulty<span class="dd-count"></span> <span class="caret">&#9662;</span></button><div class="dd-menu"><label><input type="checkbox" value="easy">Easy</label><label><input type="checkbox" value="medium">Medium</label></div></div>
+        <div class="dd" data-group="tags"><button class="dd-btn">Tags<span class="dd-count"></span> <span class="caret">&#9662;</span></button><div class="dd-menu dd-menu-wide"><label><input type="checkbox" value="aws">aws</label><label><input type="checkbox" value="c2">c2</label><label><input type="checkbox" value="cloud">cloud</label><label><input type="checkbox" value="forensics">forensics</label><label><input type="checkbox" value="lateral-movement">lateral-movement</label><label><input type="checkbox" value="llmnr">llmnr</label><label><input type="checkbox" value="malware">malware</label><label><input type="checkbox" value="memory">memory</label><label><input type="checkbox" value="network">network</label><label><input type="checkbox" value="ransomware">ransomware</label><label><input type="checkbox" value="smb">smb</label><label><input type="checkbox" value="splunk">splunk</label><label><input type="checkbox" value="threat-intel">threat-intel</label><label><input type="checkbox" value="volatility">volatility</label><label><input type="checkbox" value="web">web</label><label><input type="checkbox" value="wireshark">wireshark</label></div></div>
+        <button id="clear" class="clear-btn" style="display:none">Clear</button>
+      </div>
+    </div>
+    <div class="count" id="count"></div>
+  </div>
+  <section class="grid">
+<a class="card" href="./posts/revil-gold-southfield-lab/" data-search="revil gold southfield lab cyberdefenders forensics ransomware splunk" data-tags="forensics ransomware splunk" data-platform="cyberdefenders" data-difficulty="medium">
+  <div class="card-top">
+    <span class="src">CyberDefenders</span>
+    <span class="date">2026-08-04</span>
+  </div>
+  <h3>REvil GOLD SOUTHFIELD Lab</h3>
+  <div class="tags"><span class="tag">forensics</span><span class="tag">ransomware</span><span class="tag">splunk</span></div>
+  <div class="card-bot">
+    <span class="diff">Medium</span>
+    <span class="rt">2 min read</span>
+  </div>
+</a>
+<a class="card" href="./posts/icedid/" data-search="icedid cyberdefenders malware threat-intel" data-tags="malware threat-intel" data-platform="cyberdefenders" data-difficulty="easy">
+  <div class="card-top">
+    <span class="src">CyberDefenders</span>
+    <span class="date">2026-07-29</span>
+  </div>
+  <h3>IcedID</h3>
+  <div class="tags"><span class="tag">malware</span><span class="tag">threat-intel</span></div>
+  <div class="card-bot">
+    <span class="diff">Easy</span>
+    <span class="rt">1 min read</span>
+  </div>
+</a>
+<a class="card" href="./posts/poisonedcredentials/" data-search="poisonedcredentials letsdefend network wireshark llmnr" data-tags="network wireshark llmnr" data-platform="letsdefend" data-difficulty="easy">
+  <div class="card-top">
+    <span class="src">LetsDefend</span>
+    <span class="date">2026-07-29</span>
+  </div>
+  <h3>PoisonedCredentials</h3>
+  <div class="tags"><span class="tag">network</span><span class="tag">wireshark</span><span class="tag">llmnr</span></div>
+  <div class="card-bot">
+    <span class="diff">Easy</span>
+    <span class="rt">2 min read</span>
+  </div>
+</a>
+<a class="card" href="./posts/yellow-rat-lab/" data-search="yellow rat lab letsdefend malware threat-intel c2" data-tags="malware threat-intel c2" data-platform="letsdefend" data-difficulty="easy">
+  <div class="card-top">
+    <span class="src">LetsDefend</span>
+    <span class="date">2026-07-29</span>
+  </div>
+  <h3>Yellow RAT lab</h3>
+  <div class="tags"><span class="tag">malware</span><span class="tag">threat-intel</span><span class="tag">c2</span></div>
+  <div class="card-bot">
+    <span class="diff">Easy</span>
+    <span class="rt">2 min read</span>
+  </div>
+</a>
+<a class="card" href="./posts/awsraid/" data-search="awsraid cyberdefenders cloud aws splunk" data-tags="cloud aws splunk" data-platform="cyberdefenders" data-difficulty="medium">
+  <div class="card-top">
+    <span class="src">CyberDefenders</span>
+    <span class="date">2026-07-28</span>
+  </div>
+  <h3>AWSRaid</h3>
+  <div class="tags"><span class="tag">cloud</span><span class="tag">aws</span><span class="tag">splunk</span></div>
+  <div class="card-bot">
+    <span class="diff">Medium</span>
+    <span class="rt">5 min read</span>
+  </div>
+</a>
+<a class="card" href="./posts/psexec/" data-search="psexec letsdefend network lateral-movement" data-tags="network lateral-movement" data-platform="letsdefend" data-difficulty="easy">
+  <div class="card-top">
+    <span class="src">LetsDefend</span>
+    <span class="date">2026-07-28</span>
+  </div>
+  <h3>Psexec</h3>
+  <div class="tags"><span class="tag">network</span><span class="tag">lateral-movement</span></div>
+  <div class="card-bot">
+    <span class="diff">Easy</span>
+    <span class="rt">1 min read</span>
+  </div>
+</a>
+<a class="card" href="./posts/block/" data-search="block writeup thm tryhackme network wireshark smb" data-tags="network wireshark smb" data-platform="tryhackme" data-difficulty="easy">
+  <div class="card-top">
+    <span class="src">TryHackMe</span>
+    <span class="date">2024-09-04</span>
+  </div>
+  <h3>Block Writeup THM</h3>
+  <div class="tags"><span class="tag">network</span><span class="tag">wireshark</span><span class="tag">smb</span></div>
+  <div class="card-bot">
+    <span class="diff">Easy</span>
+    <span class="rt">2 min read</span>
+  </div>
+</a>
+<a class="card" href="./posts/amadey/" data-search="amadey - memory forensics writeup cyberdefenders forensics memory malware" data-tags="forensics memory malware" data-platform="cyberdefenders" data-difficulty="medium">
+  <div class="card-top">
+    <span class="src">CyberDefenders</span>
+    <span class="date"></span>
+  </div>
+  <h3>Amadey - Memory Forensics Writeup</h3>
+  <div class="tags"><span class="tag">forensics</span><span class="tag">memory</span><span class="tag">malware</span></div>
+  <div class="card-bot">
+    <span class="diff">Medium</span>
+    <span class="rt">2 min read</span>
+  </div>
+</a>
+<a class="card" href="./posts/tomcat-takeover-lab/" data-search="tomcat takeover lab cyberdefenders network wireshark web" data-tags="network wireshark web" data-platform="cyberdefenders" data-difficulty="easy">
+  <div class="card-top">
+    <span class="src">CyberDefenders</span>
+    <span class="date"></span>
+  </div>
+  <h3>Tomcat Takeover Lab</h3>
+  <div class="tags"><span class="tag">network</span><span class="tag">wireshark</span><span class="tag">web</span></div>
+  <div class="card-bot">
+    <span class="diff">Easy</span>
+    <span class="rt">1 min read</span>
+  </div>
+</a>
+<a class="card" href="./posts/volatility-traces/" data-search="cyberdefenders: volatility traces cyberdefenders forensics memory volatility" data-tags="forensics memory volatility" data-platform="cyberdefenders" data-difficulty="medium">
+  <div class="card-top">
+    <span class="src">CyberDefenders</span>
+    <span class="date"></span>
+  </div>
+  <h3>CyberDefenders: Volatility Traces</h3>
+  <div class="tags"><span class="tag">forensics</span><span class="tag">memory</span><span class="tag">volatility</span></div>
+  <div class="card-bot">
+    <span class="diff">Medium</span>
+    <span class="rt">2 min read</span>
+  </div>
+</a>
+  </section>
+  <div class="empty" id="empty" style="display:none">No writeups match that search.</div>
+</div>
+<script>
+  (function(){
+    var params = new URLSearchParams(location.search);
+    var search = document.getElementById('search');
+    var nav = document.getElementById('navsearch');
+    var clear = document.getElementById('clear');
+    var count = document.getElementById('count');
+    var empty = document.getElementById('empty');
+    var cards = [].slice.call(document.querySelectorAll('.card'));
+    var dropdowns = [].slice.call(document.querySelectorAll('.dd'));
+    var tagBoxes = [].slice.call(document.querySelectorAll('.dd[data-group="tags"] input'));
+    cards.forEach(function(card){
+      card.hay = [card.getAttribute('data-search'), card.getAttribute('data-difficulty'), card.querySelector('.date').textContent].join(' ').toLowerCase();
+    });
+    if (params.get('q')) { search.value = params.get('q'); if (nav) nav.value = params.get('q'); }
+    (params.get('tag') || '').split(',').forEach(function(t){
+      tagBoxes.forEach(function(i){ if (i.value === t) i.checked = true; });
+    });
+
+    function checked(group){
+      return [].slice.call(document.querySelectorAll('.dd[data-group="'+group+'"] input:checked')).map(function(i){return i.value;});
+    }
+    function apply(){
+      // every typed word must appear somewhere in the card (title, platform, tags, difficulty, date)
+      var words = search.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      var plat = checked('platform'), diff = checked('difficulty'), tags = checked('tags');
+      var shown = 0;
+      cards.forEach(function(card){
+        var cTags = card.getAttribute('data-tags').split(' ');
+        var cPlat = card.getAttribute('data-platform');
+        var cDiff = card.getAttribute('data-difficulty');
+        var ok = words.every(function(w){ return card.hay.indexOf(w) !== -1; })
+          && (!plat.length || plat.indexOf(cPlat) !== -1)
+          && (!diff.length || diff.indexOf(cDiff) !== -1)
+          && (!tags.length || tags.every(function(t){ return cTags.indexOf(t) !== -1; }));
+        card.style.display = ok ? '' : 'none';
+        if (ok) shown++;
+        card.querySelectorAll('.tag').forEach(function(el){ el.classList.toggle('on', tags.indexOf(el.textContent) !== -1); });
+      });
+      count.textContent = shown + (shown === 1 ? ' writeup' : ' writeups');
+      empty.style.display = shown ? 'none' : 'block';
+      var any = words.length || plat.length || diff.length || tags.length;
+      clear.style.display = any ? '' : 'none';
+      dropdowns.forEach(function(dd){
+        var n = dd.querySelectorAll('input:checked').length;
+        dd.querySelector('.dd-count').textContent = n ? ' ('+n+')' : '';
+      });
+      // keep the URL shareable
+      var p = new URLSearchParams();
+      if (search.value.trim()) p.set('q', search.value.trim());
+      if (tags.length) p.set('tag', tags.join(','));
+      var qs = p.toString();
+      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+    }
+    // clicking a tag on a card toggles that tag filter instead of opening the post
+    document.querySelector('.grid').addEventListener('click', function(e){
+      var tag = e.target.closest('.tag');
+      if (!tag) return;
+      e.preventDefault();
+      tagBoxes.forEach(function(i){ if (i.value === tag.textContent) i.checked = !i.checked; });
+      apply();
+    });
+    search.addEventListener('input', function(){ if (nav) nav.value = search.value; apply(); });
+    if (nav) nav.addEventListener('input', function(){ search.value = nav.value; apply(); });
+    document.querySelectorAll('.dd input').forEach(function(i){ i.addEventListener('change', apply); });
+    dropdowns.forEach(function(dd){
+      var btn = dd.querySelector('.dd-btn');
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var open = dd.classList.contains('open');
+        dropdowns.forEach(function(o){ o.classList.remove('open'); });
+        if (!open) dd.classList.add('open');
+      });
+    });
+    document.addEventListener('click', function(){ dropdowns.forEach(function(o){ o.classList.remove('open'); }); });
+    clear.addEventListener('click', function(){
+      search.value = ''; if (nav) nav.value = '';
+      document.querySelectorAll('.dd input:checked').forEach(function(i){ i.checked = false; });
+      apply();
+    });
+    apply();
+  })();</script>
+<footer><div class="wrap">&copy; <span id="yr"></span> Keenan Morrison</div></footer>
+<script>
+  const r = document.documentElement;
+  const s = localStorage.getItem('theme'); if (s) r.setAttribute('data-theme', s);
+  const t = document.getElementById('toggle');
+  if (t) t.onclick = () => { const n = r.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+  const y = document.getElementById('yr'); if (y) y.textContent = new Date().getFullYear();
+  const ns = document.getElementById('navsearch');
+  if (ns) ns.addEventListener('keydown', e => { if (e.key === 'Enter' && !document.getElementById('search')) location.href = '/blog/?q=' + encodeURIComponent(ns.value); });
+</script>
+</body>
+</html>

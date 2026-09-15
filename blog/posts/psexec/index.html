@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Psexec — Keenan Morrison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/blog.css" />
+</head>
+<body>
+<nav><div class="nav">
+  <a class="brand" href="/">Keenan Morrison</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/blog/" class="here">Blog</a><a href="/#projects">Projects</a><a href="/#about">About</a></div>
+  <div class="nav-search"><span class="ns-ico">&#9906;</span><input id="navsearch" type="search" placeholder="Search" autocomplete="off" /></div>
+  <button class="toggle" id="toggle" aria-label="Toggle theme">&#9790;</button>
+</div></nav>
+<div class="wrap post">
+  <a class="back" href="/blog/">&larr; All writeups</a>
+  <header class="post-head">
+    <div class="post-meta">
+      <span class="src">LetsDefend</span>
+      <span class="dot">&middot;</span><span>Easy</span>
+      <span class="dot">&middot;</span><span>2026-07-28</span>
+      <span class="dot">&middot;</span><span>1 min read</span>
+    </div>
+    <h1>Psexec</h1>
+    <div class="tags"><a class="tag" href="/blog/?tag=network">network</a><a class="tag" href="/blog/?tag=lateral-movement">lateral-movement</a></div>
+  </header>
+  <article class="prose">
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Malicious Executable</td>
+<td>PSEXESVC.exe</td>
+<td></td>
+</tr>
+<tr>
+<td>Affected Share</td>
+<td>Admin$</td>
+<td></td>
+</tr>
+<tr>
+<td>Communication Channel</td>
+<td>IPC$</td>
+<td>Indicated by <code>stderr</code>, <code>stdout</code>, &amp; <code>stdin</code></td>
+</tr>
+</tbody>
+</table>
+<p>I went to <code>File &gt; Export Objects &gt; SMB</code> to see all the files transferred over SMB so that I can find the executable the attacker setup on the target.</p>
+<p><img src="img/Pasted%20image%2020260728043335.png" alt=""></p>
+<p>So i applied the filter <code>smb2.tree</code> to see when the attacker is trying to connect to a network share. After applying this filter i see what i see below and there are two shares which are indicated by the <code>$</code> at the end and <code>IPC</code> is a hidden share for processes to communicate to each other in RAM so</p>
+<p><code>ADMIN$</code> is the share the attacker is using to install services on the target machines</p>
+<p><img src="img/Pasted%20image%2020260728045748.png" alt=""></p>
+<p>So the purpose of <code>stdin</code> is an indicator for sending cmds over the network, <code>stdout</code> sends the responses back and <code>stderr</code> is for errors</p>
+<p><img src="img/Pasted%20image%2020260728050848.png" alt=""></p>
+<h2>Question 7</h2>
+<p>So I looked for smb traffic from the attackers IP</p>
+<p><img src="img/Pasted%20image%2020260728052650.png" alt=""></p>
+<p>Then I followed the TCP Stream of the packet and it shows the share <code>MARKETING-PC$</code>
+<img src="img/Pasted%20image%2020260728052720.png" alt=""></p>
+
+  </article>
+</div>
+<footer><div class="wrap">&copy; <span id="yr"></span> Keenan Morrison</div></footer>
+<script>
+  const r = document.documentElement;
+  const s = localStorage.getItem('theme'); if (s) r.setAttribute('data-theme', s);
+  const t = document.getElementById('toggle');
+  if (t) t.onclick = () => { const n = r.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+  const y = document.getElementById('yr'); if (y) y.textContent = new Date().getFullYear();
+</script>
+<script src="../../assets/blog-search.js"></script>
+</body>
+</html>

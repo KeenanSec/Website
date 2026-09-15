@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Yellow RAT lab — Keenan Morrison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/blog.css" />
+</head>
+<body>
+<nav><div class="nav">
+  <a class="brand" href="/">Keenan Morrison</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/blog/" class="here">Blog</a><a href="/#projects">Projects</a><a href="/#about">About</a></div>
+  <div class="nav-search"><span class="ns-ico">&#9906;</span><input id="navsearch" type="search" placeholder="Search" autocomplete="off" /></div>
+  <button class="toggle" id="toggle" aria-label="Toggle theme">&#9790;</button>
+</div></nav>
+<div class="wrap post">
+  <a class="back" href="/blog/">&larr; All writeups</a>
+  <header class="post-head">
+    <div class="post-meta">
+      <span class="src">LetsDefend</span>
+      <span class="dot">&middot;</span><span>Easy</span>
+      <span class="dot">&middot;</span><span>2026-07-29</span>
+      <span class="dot">&middot;</span><span>2 min read</span>
+    </div>
+    <h1>Yellow RAT lab</h1>
+    <div class="tags"><a class="tag" href="/blog/?tag=malware">malware</a><a class="tag" href="/blog/?tag=threat-intel">threat-intel</a><a class="tag" href="/blog/?tag=c2">c2</a></div>
+  </header>
+  <article class="prose">
+<h2>Summary</h2>
+<p>In this report I used VirusTotal to identify the malware family , common filename associated with discovery , I also identified where the malware dropped a file via Red Canary Report &amp; I identified the C2.</p>
+<p>Q1</p>
+<p>Understanding the adversary helps defend against attacks. What is the name of the malware family that causes abnormal network traffic?</p>
+<p>Answer : <code>Yellow Cockatoo RAT</code></p>
+<p>FIrst I opened the file <code>hash.txt</code> and copied the hash.</p>
+<p><img src="img/Pasted%20image%2020260729200839.png" alt=""></p>
+<p>Then I went to Virustotal and when I looked at the Community tab I see that the name <code>Yellow Cockatoo RAT</code></p>
+<p><img src="img/Pasted%20image%2020260729202346.png" alt=""></p>
+<hr>
+<p>Q2</p>
+<p>As part of our incident response, knowing common filenames the malware uses can help scan other workstations for potential infection. What is the common filename associated with the malware discovered on our workstations?</p>
+<p>Answer : <code>111bc461-1ca8-43c6-97ed-911e0e69fdf8.dll</code>
+This asks for the common file and I saw at the top that <code>111bc461-1ca8-43c6-97ed-911e0e69fdf8.dll</code></p>
+<p><img src="img/Pasted%20image%2020260729202609.png" alt=""></p>
+<hr>
+<p>Q3</p>
+<p>Determining the compilation timestamp of malware can reveal insights into its development and deployment timeline. What is the compilation timestamp of the malware that infected our network?</p>
+<p>Answer : <code>2020-09-24 18:26</code></p>
+<p>After looking in the Portable Executable Info i was able to see the compilation timestamp which is <code>2020-09-24 18:26:47 UTC</code></p>
+<p><img src="img/Pasted%20image%2020260729202856.png" alt=""></p>
+<hr>
+<p>Q4</p>
+<p>Understanding when the broader cybersecurity community first identified the malware could help determine how long the malware might have been in the environment before detection. When was the malware first submitted to VirusTotal?
+Answer : <code>2020-10-15 02:47</code></p>
+<p>This question asks for when the malware was first submitted to VirusTotal. I am able to see this by scrolling down to the <code>History</code> section. The first submission was at <code>2020-10-15 02:47:37 UTC</code></p>
+<p><img src="img/Pasted%20image%2020260729203026.png" alt=""></p>
+<hr>
+<p>Q5</p>
+<p>To completely eradicate the threat from Industries' systems, we need to identify all components dropped by the malware. What is the name of the <strong>.dat</strong> file that the malware dropped in the <strong>AppData</strong> folder?</p>
+<p>First I searched for the Malware on google to see a report on this piece of malware.</p>
+<p><img src="img/Pasted%20image%2020260729203322.png" alt=""></p>
+<p>After looking at the threat report i was able to see the file <code>solarmarker.dat</code></p>
+<p><img src="img/Pasted%20image%2020260729203711.png" alt=""></p>
+<hr>
+<p>Q6</p>
+<p>It is crucial to identify the C2 servers with which the malware communicates to block its communication and prevent further data exfiltration. What is the C2 server that the malware is communicating with?</p>
+<p><img src="img/Pasted%20image%2020260729203906.png" alt=""></p>
+<hr>
+
+  </article>
+</div>
+<footer><div class="wrap">&copy; <span id="yr"></span> Keenan Morrison</div></footer>
+<script>
+  const r = document.documentElement;
+  const s = localStorage.getItem('theme'); if (s) r.setAttribute('data-theme', s);
+  const t = document.getElementById('toggle');
+  if (t) t.onclick = () => { const n = r.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+  const y = document.getElementById('yr'); if (y) y.textContent = new Date().getFullYear();
+</script>
+<script src="../../assets/blog-search.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>REvil GOLD SOUTHFIELD Lab — Keenan Morrison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/blog.css" />
+</head>
+<body>
+<nav><div class="nav">
+  <a class="brand" href="/">Keenan Morrison</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/blog/" class="here">Blog</a><a href="/#projects">Projects</a><a href="/#about">About</a></div>
+  <div class="nav-search"><span class="ns-ico">&#9906;</span><input id="navsearch" type="search" placeholder="Search" autocomplete="off" /></div>
+  <button class="toggle" id="toggle" aria-label="Toggle theme">&#9790;</button>
+</div></nav>
+<div class="wrap post">
+  <a class="back" href="/blog/">&larr; All writeups</a>
+  <header class="post-head">
+    <div class="post-meta">
+      <span class="src">CyberDefenders</span>
+      <span class="dot">&middot;</span><span>Medium</span>
+      <span class="dot">&middot;</span><span>2026-08-04</span>
+      <span class="dot">&middot;</span><span>2 min read</span>
+    </div>
+    <h1>REvil GOLD SOUTHFIELD Lab</h1>
+    <div class="tags"><a class="tag" href="/blog/?tag=forensics">forensics</a><a class="tag" href="/blog/?tag=ransomware">ransomware</a><a class="tag" href="/blog/?tag=splunk">splunk</a></div>
+  </header>
+  <article class="prose">
+<p><img src="img/Pasted%20image%2020260804233656.png" alt=""></p>
+<p>To begin your investigation, can you identify the filename of the note that the ransomware left behind?</p>
+<p>Answer : <code>5uizv5660t-readme.txt</code>
+This the query I used that looks through the <code>revil</code> index for filenames with the word <code>readme</code> or <code>help</code> in the current directory.</p>
+<pre class="hl"><code>index=revil  winlog.event_data.TargetFilename=&quot;*README*&quot; OR winlog.event_data.TargetFilename=&quot;*HELP*&quot; | table _time winlog.event_data.Image winlog.event_data.TargetFilename winlog.event_data.CurrentDirectory
+</code></pre>
+<hr>
+<p>Q2</p>
+<p>After identifying the ransom note, the next step is to pinpoint the source. What's the process ID of the ransomware that's likely involved</p>
+<p>Answer : <code>5348</code></p>
+<p>This query looks for processes that are being created with facebook assistant.exe in it, and it shows the Parent Process Id , Parent Process ,  Process and process ID. The purpose of this is to find the when the process was actually created ,what spawned the process initially, and what the malicious process spawned after being spawned.</p>
+<pre class="hl"><code>index=revil winlog.event_id=1 &quot;facebook assistant.exe&quot;
+| table _time winlog.event_data.Image winlog.event_data.ProcessId winlog.event_data.ParentImage winlog.event_data.ParentProcessId
+</code></pre>
+<p><img src="img/Pasted%20image%2020260805002745.png" alt=""></p>
+<hr>
+<p>Please enter a numeric answer.</p>
+<p>Q3</p>
+<p>Having determined the ransomware's process ID, the next logical step is to locate its origin. Where can we find the ransomware's executable file?</p>
+<p>Answer : <code>C:\Users\Administrator\Downloads\facebook assistant.exe</code></p>
+<hr>
+<p>Q4</p>
+<p>Now that you've pinpointed the ransomware's executable location, let's dig deeper. It's a common tactic for ransomware to disrupt system recovery methods. Can you identify the command that was used for this purpose?</p>
+<p>Answer : <code>Get-WmiObject Win32_Shadowcopy | ForEach-Object {$_.Delete();}</code></p>
+<p>So I modified the query to find powershell commands.</p>
+<p><img src="img/Pasted%20image%2020260805005537.png" alt=""></p>
+<p><img src="img/Pasted%20image%2020260805010244.png" alt=""></p>
+<pre class="hl"><code>Get-WmiObject Win32_Shadowcopy | ForEach-Object {$_.Delete();}
+</code></pre>
+<hr>
+<p>Q5</p>
+<p>As we trace the ransomware's steps, a deeper verification is needed. Can you provide the sha256 hash of the ransomware's executable to cross-check with known malicious signatures?</p>
+<p>Answer : <code>B8D7FB4488C0556385498271AB9FFFDF0EB38BB2A330265D9852E3A6288092AA</code></p>
+<p>I modified the query to allow me to see the hashes associated with <code>facebook assistant.exe</code></p>
+<p><img src="img/Pasted%20image%2020260805010653.png" alt=""></p>
+<hr>
+<p>Q6</p>
+<p>One crucial piece remains: identifying the attacker's communication channel. Can you leverage threat intelligence and known Indicators of Compromise (IoCs) to pinpoint the ransomware author's onion domain?</p>
+<p>Answer : <code>aplebzu47wgazapdqks6vrcv6zcnjppkbxbr6wketf56nf6aq2nmyoyd.onion</code></p>
+<p>I went to <code>tri.age</code> and I search up the hash that i found through Splunk . After scrolling down I was able to see a <code>.onion</code> that was used for allowing the victim to decrypt a file and verify the legitimacy of the attackers threats.</p>
+<p><img src="img/Pasted%20image%2020260805013320.png" alt=""></p>
+
+  </article>
+</div>
+<footer><div class="wrap">&copy; <span id="yr"></span> Keenan Morrison</div></footer>
+<script>
+  const r = document.documentElement;
+  const s = localStorage.getItem('theme'); if (s) r.setAttribute('data-theme', s);
+  const t = document.getElementById('toggle');
+  if (t) t.onclick = () => { const n = r.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+  const y = document.getElementById('yr'); if (y) y.textContent = new Date().getFullYear();
+</script>
+<script src="../../assets/blog-search.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IcedID — Keenan Morrison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/blog.css" />
+</head>
+<body>
+<nav><div class="nav">
+  <a class="brand" href="/">Keenan Morrison</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/blog/" class="here">Blog</a><a href="/#projects">Projects</a><a href="/#about">About</a></div>
+  <div class="nav-search"><span class="ns-ico">&#9906;</span><input id="navsearch" type="search" placeholder="Search" autocomplete="off" /></div>
+  <button class="toggle" id="toggle" aria-label="Toggle theme">&#9790;</button>
+</div></nav>
+<div class="wrap post">
+  <a class="back" href="/blog/">&larr; All writeups</a>
+  <header class="post-head">
+    <div class="post-meta">
+      <span class="src">CyberDefenders</span>
+      <span class="dot">&middot;</span><span>Easy</span>
+      <span class="dot">&middot;</span><span>2026-07-29</span>
+      <span class="dot">&middot;</span><span>1 min read</span>
+    </div>
+    <h1>IcedID</h1>
+    <div class="tags"><a class="tag" href="/blog/?tag=malware">malware</a><a class="tag" href="/blog/?tag=threat-intel">threat-intel</a></div>
+  </header>
+  <article class="prose">
+<p>I went to virus total and looked up the hash given to be in the lab files.  I went to the <code>Details</code> tab and then scrolled down to the <code>Names</code> section which is what is show in the screenshot below</p>
+<p><img src="img/Pasted%20image%2020260729230844.png" alt=""></p>
+<p><code>document-1982481273.xlsm</code></p>
+<p>Q1</p>
+<p>What is the name of the file associated with the given hash?</p>
+<p>Q2</p>
+<p>Can you identify the filename of the <strong>GIF</strong> file that was deployed?</p>
+<p>Answer : <code>3003.gif</code></p>
+<p>So I went to the <code>Relations</code> section and then scrolled down to the dropped files.
+After scrolling down I looked for files ending in <code>.gif</code></p>
+<p><img src="img/Pasted%20image%2020260729231205.png" alt=""></p>
+<hr>
+<p>Q3</p>
+<p>How many domains does the malware look to download the additional payload file in <strong>Q2</strong>?</p>
+<p>Answer :  <code>5</code></p>
+<p>After looking through the contacted urls I looked for urls that included <code>3003.gif</code> which is the file that I found</p>
+<p><img src="img/Pasted%20image%2020260729231902.png" alt=""></p>
+<p>Q4</p>
+<p>From the domains mentioned in <strong>Q3</strong>, a DNS registrar was predominantly used by the threat actor to host their harmful content, enabling the malware's functionality. Can you specify the Registrar INC?</p>
+<p>Answer : <code>NameCheap</code></p>
+<p>I looked for the Registrar corresponding to the domains that I found out were hosting the <code>3003.gif</code> and <code>tajushariya.com</code> used the Registrar NameCheap, Inc.</p>
+<p><img src="img/Pasted%20image%2020260729232150.png" alt=""></p>
+<hr>
+<p>Q5</p>
+<p>Could you specify the threat actor linked to the sample provided?</p>
+<p>Answer : <code>Gold Cabin</code></p>
+<p>I looked for the threat groups associated with IcedID and then after looking through the Group Description I was able to identify the threat actor was named <code>GOLD CABIN</code>
+<img src="img/Pasted%20image%2020260729232752.png" alt=""></p>
+<hr>
+<p>Q6</p>
+<p>In the <strong>Execution</strong> phase, what function does the malware employ to fetch extra payloads onto the system?</p>
+<p><img src="img/Pasted%20image%2020260729234724.png" alt=""></p>
+
+  </article>
+</div>
+<footer><div class="wrap">&copy; <span id="yr"></span> Keenan Morrison</div></footer>
+<script>
+  const r = document.documentElement;
+  const s = localStorage.getItem('theme'); if (s) r.setAttribute('data-theme', s);
+  const t = document.getElementById('toggle');
+  if (t) t.onclick = () => { const n = r.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+  const y = document.getElementById('yr'); if (y) y.textContent = new Date().getFullYear();
+</script>
+<script src="../../assets/blog-search.js"></script>
+</body>
+</html>

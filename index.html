@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Keenan Morrison</title>
+<meta name="description" content="Keenan Morrison. Cybersecurity student focused on DFIR, detection engineering, and cloud security." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./assets/css/main.css" />
+<link rel="stylesheet" href="./assets/css/home.css" />
+</head>
+<body>
+<nav>
+  <div class="nav">
+    <a class="brand" href="./">Keenan Morrison</a>
+    <div class="nav-links">
+      <a href="./" class="active">Home</a>
+      <a href="./blog" target="_blank" rel="noopener">Blog</a>
+      <a href="./about">About</a>
+    </div>
+    <button class="toggle" id="toggle" aria-label="Toggle theme">☾</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <img class="hero-photo" src="./images/152763773.jpg" alt="Keenan Morrison"
+         onerror="this.style.background='var(--accent-soft)';this.alt='';this.removeAttribute('src');" />
+    <div>
+      <div class="tag">DFIR · Detection Engineering · Cloud Security</div>
+      <h1>Keenan Morrison</h1>
+      <p>Cybersecurity student focused on <strong>DFIR, detection engineering, cloud security, and NHI security</strong>. I run a home SOC lab, write up investigations, and spend my spare cycles on CTFs.</p>
+      <div class="socials" id="socials"></div>
+    </div>
+  </header>
+
+  <section id="projects">
+    <div class="sec-head">
+      <div class="sec-title">Projects</div>
+      <a href="./blog" target="_blank" rel="noopener">Read the blog →</a>
+    </div>
+    <div class="proj" id="projects-grid"></div>
+  </section>
+</div>
+
+<footer><div class="wrap">© <span id="yr"></span> Keenan Morrison · <a href="./about">About</a> · <a href="./blog" target="_blank" rel="noopener">Blog</a></div></footer>
+
+<script src="./assets/js/icons.js"></script>
+<script src="./assets/js/data.js"></script>
+<script src="./assets/js/home.js"></script>
+<script src="./assets/js/site.js"></script>
+</body>
+</html>

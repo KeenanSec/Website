@@ -1,0 +1,32 @@
+.hero { display: flex; gap: 56px; align-items: center; padding: 96px 0 72px; }
+.hero-photo { width: 220px; height: 220px; border-radius: 50%; flex-shrink: 0; object-fit: cover; border: 2px solid var(--border); background: var(--card); }
+.hero > div { flex: 1; }
+.hero h1 { font-size: 52px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.05; }
+.hero .tag { color: var(--accent); font-weight: 600; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+.hero p { color: var(--muted); margin-top: 18px; font-size: 17px; max-width: 620px; line-height: 1.7; }
+.hero p strong { color: var(--text); font-weight: 600; }
+
+.socials { display: flex; gap: 12px; margin-top: 30px; }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); background: var(--card); transition: color .15s, border-color .15s, transform .15s; }
+.icon-btn:hover { color: var(--accent); border-color: var(--border-hover); transform: translateY(-2px); }
+.icon-btn svg { width: 20px; height: 20px; }
+
+section { padding: 64px 0; border-top: 1px solid var(--border); }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 22px; }
+.sec-head .sec-title { margin-bottom: 0; }
+.sec-head a { color: var(--accent); font-size: 14px; text-decoration: none; }
+.sec-head a:hover { text-decoration: underline; }
+
+.proj { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.p-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; background: var(--card); text-decoration: none; color: inherit; transition: .15s; display: block; }
+.p-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+.p-card h3 { font-size: 17px; margin-bottom: 6px; }
+.p-card p { color: var(--muted); font-size: 14px; }
+
+@media (max-width: 860px){ .proj { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .hero { flex-direction: column; text-align: center; align-items: center; gap: 28px; padding-top: 64px; }
+  .hero-photo { width: 160px; height: 160px; }
+  .hero h1 { font-size: 40px; }
+  .hero p { text-align: left; } .socials { justify-content: center; }
+}

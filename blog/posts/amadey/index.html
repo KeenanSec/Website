@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amadey - Memory Forensics Writeup — Keenan Morrison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/blog.css" />
+</head>
+<body>
+<nav><div class="nav">
+  <a class="brand" href="/">Keenan Morrison</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/blog/" class="here">Blog</a><a href="/#projects">Projects</a><a href="/#about">About</a></div>
+  <div class="nav-search"><span class="ns-ico">&#9906;</span><input id="navsearch" type="search" placeholder="Search" autocomplete="off" /></div>
+  <button class="toggle" id="toggle" aria-label="Toggle theme">&#9790;</button>
+</div></nav>
+<div class="wrap post">
+  <a class="back" href="/blog/">&larr; All writeups</a>
+  <header class="post-head">
+    <div class="post-meta">
+      <span class="src">CyberDefenders</span>
+      <span class="dot">&middot;</span><span>Medium</span>
+      
+      <span class="dot">&middot;</span><span>2 min read</span>
+    </div>
+    <h1>Amadey - Memory Forensics Writeup</h1>
+    <div class="tags"><a class="tag" href="/blog/?tag=forensics">forensics</a><a class="tag" href="/blog/?tag=memory">memory</a><a class="tag" href="/blog/?tag=malware">malware</a></div>
+  </header>
+  <article class="prose">
+<p>A memory forensics investigation of a Windows host infected with <strong>Amadey</strong>, a modular loader/botnet malware. Analysis was done with <strong>Volatility 3</strong> against a <code>.vmem</code> snapshot, plus <code>strings</code> and <code>grep</code> for HTTP artifacts.</p>
+<ul>
+<li><strong>Sample:</strong> <code>Windows 7 x64-Snapshot4.vmem</code></li>
+<li><strong>Tooling:</strong> Volatility 3, strings, grep</li>
+</ul>
+<hr>
+<h2>Q1 - Parent process behind the malicious activity</h2>
+<p>Running <code>windows.cmdline</code> shows a process named <code>lssass.exe</code> (note the double <code>s</code>, masquerading as the legitimate <code>lsass.exe</code>) executing from a user's <code>Temp</code> directory instead of <code>C:\Windows</code> or <code>C:\Program Files</code>. Legitimate <code>lsass.exe</code> only ever runs from <code>System32</code>, so this is the rogue parent.</p>
+<p><strong>Answer:</strong> <code>lssass.exe</code> (PID 2748)</p>
+<p><img src="img/01-cmdline-lssass.png" alt="cmdline output showing lssass.exe"></p>
+<hr>
+<h2>Q2 - Location of the rogue process</h2>
+<p>The path visible in the same <code>windows.cmdline</code> output confirms where the binary lives on disk.</p>
+<p><strong>Answer:</strong> <code>C:\Users\0XSH3R~1\AppData\Local\Temp\925e7e99c5\lssass.exe</code></p>
+<hr>
+<h2>Q3 - Command and Control (C2) server IP</h2>
+<p>Ran <code>windows.netscan</code> and grepped for the process name:</p>
+<pre class="hl"><code>vol.py -f <span class="hljs-string">&quot;Windows 7 x64-Snapshot4.vmem&quot;</span> windows.netscan &gt; netscan.txt
+<span class="hljs-built_in">cat</span> netscan.txt | grep lssass
+</code></pre>
+<p><code>lssass.exe</code> (PID 2748) has two connections to the same external IP on port 80.</p>
+<p><strong>Answer:</strong> <code>41.75.84.12</code></p>
+<p><img src="img/02-netscan-c2.png" alt="netscan output showing C2 IP"></p>
+<hr>
+<h2>Q4 - Number of additional files being fetched</h2>
+<p>Dumped the process memory, then pulled HTTP <code>GET</code> requests out of it with <code>strings</code>:</p>
+<pre class="hl"><code>vol.py -f <span class="hljs-string">&quot;Windows 7 x64-Snapshot4.vmem&quot;</span> windows.memmap --pid 2748 --dump
+strings pid.2748.dmp | grep <span class="hljs-string">&quot;GET /&quot;</span>
+</code></pre>
+<p>Two distinct plugin DLLs are being downloaded from the C2:</p>
+<ul>
+<li><code>/rock/Plugins/cred64.dll</code></li>
+<li><code>/rock/Plugins/clip64.dll</code></li>
+</ul>
+<p><strong>Answer:</strong> <code>2</code></p>
+<p><img src="img/03-strings-get.png" alt="strings GET requests"></p>
+<hr>
+<h2>Q5 - Full path of the downloaded file used in the attack</h2>
+<p>Checked <code>windows.cmdline</code> for what actually got executed. <code>rundll32.exe</code> (PID 3064) is launched pointing at the dropped plugin.</p>
+<p><strong>Answer:</strong> <code>C:\Users\0xSh3rl0ck\AppData\Roaming\116711e5a2ab05\clip64.dll</code></p>
+<p><img src="img/04-cmdline-rundll32.png" alt="cmdline showing rundll32 loading clip64.dll"></p>
+<hr>
+<h2>Q6 - Child process spawned to execute the plugins</h2>
+<p>Used <code>windows.pstree</code> and grepped for the malware's PID (2748) to find its children.</p>
+<pre class="hl"><code><span class="hljs-built_in">cat</span> pstree.txt | grep 2748
+</code></pre>
+<p><code>rundll32.exe</code> (PID 3064) has parent PID 2748 (<code>lssass.exe</code>), confirming it was spawned by the malware to load the downloaded DLL.</p>
+<p><strong>Answer:</strong> <code>rundll32.exe</code></p>
+<p><img src="img/05-pstree-child.png" alt="pstree showing rundll32 child"></p>
+<hr>
+<h2>Q7 - Additional persistence mechanism</h2>
+<p>Ran <code>windows.filescan</code> and grepped for the malware name:</p>
+<pre class="hl"><code><span class="hljs-built_in">cat</span> filescan | grep lssass
+</code></pre>
+<p>Besides the <code>Temp</code> directory copies, there is a reference under <code>\Windows\System32\Tasks\lssass.exe</code> - a <strong>scheduled task</strong>, a well-known Amadey persistence technique.</p>
+<p><strong>Answer:</strong> <code>C:\Windows\System32\Tasks</code> (scheduled task)</p>
+<p><img src="img/06-filescan-persistence.png" alt="filescan showing Tasks persistence"></p>
+<hr>
+<h2>Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+<th>MITRE ATT&amp;CK</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Malicious process</td>
+<td><code>lssass.exe</code> (PID 2748)</td>
+<td>T1036 Masquerading</td>
+</tr>
+<tr>
+<td>On-disk path</td>
+<td><code>C:\Users\0XSH3R~1\AppData\Local\Temp\925e7e99c5\lssass.exe</code></td>
+<td>T1036 Masquerading</td>
+</tr>
+<tr>
+<td>C2 server</td>
+<td><code>41.75.84.12:80</code></td>
+<td>T1071.001 Web Protocols</td>
+</tr>
+<tr>
+<td>Plugins downloaded</td>
+<td><code>cred64.dll</code>, <code>clip64.dll</code></td>
+<td>T1105 Ingress Tool Transfer</td>
+</tr>
+<tr>
+<td>Loaded plugin path</td>
+<td><code>C:\Users\0xSh3rl0ck\AppData\Roaming\116711e5a2ab05\clip64.dll</code></td>
+<td>T1105 Ingress Tool Transfer</td>
+</tr>
+<tr>
+<td>Child process</td>
+<td><code>rundll32.exe</code> (PID 3064)</td>
+<td>T1218.011 Rundll32</td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>Scheduled task in <code>\Windows\System32\Tasks</code></td>
+<td>T1053.005 Scheduled Task</td>
+</tr>
+</tbody>
+</table>
+
+  </article>
+</div>
+<footer><div class="wrap">&copy; <span id="yr"></span> Keenan Morrison</div></footer>
+<script>
+  const r = document.documentElement;
+  const s = localStorage.getItem('theme'); if (s) r.setAttribute('data-theme', s);
+  const t = document.getElementById('toggle');
+  if (t) t.onclick = () => { const n = r.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+  const y = document.getElementById('yr'); if (y) y.textContent = new Date().getFullYear();
+</script>
+<script src="../../assets/blog-search.js"></script>
+</body>
+</html>

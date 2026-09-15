@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberDefenders: Volatility Traces — Keenan Morrison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/blog.css" />
+</head>
+<body>
+<nav><div class="nav">
+  <a class="brand" href="/">Keenan Morrison</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/blog/" class="here">Blog</a><a href="/#projects">Projects</a><a href="/#about">About</a></div>
+  <div class="nav-search"><span class="ns-ico">&#9906;</span><input id="navsearch" type="search" placeholder="Search" autocomplete="off" /></div>
+  <button class="toggle" id="toggle" aria-label="Toggle theme">&#9790;</button>
+</div></nav>
+<div class="wrap post">
+  <a class="back" href="/blog/">&larr; All writeups</a>
+  <header class="post-head">
+    <div class="post-meta">
+      <span class="src">CyberDefenders</span>
+      <span class="dot">&middot;</span><span>Medium</span>
+      
+      <span class="dot">&middot;</span><span>2 min read</span>
+    </div>
+    <h1>CyberDefenders: Volatility Traces</h1>
+    <div class="tags"><a class="tag" href="/blog/?tag=forensics">forensics</a><a class="tag" href="/blog/?tag=memory">memory</a><a class="tag" href="/blog/?tag=volatility">volatility</a></div>
+  </header>
+  <article class="prose">
+<p>Memory forensics investigation of a Windows host (<code>memory.dmp</code>) using Volatility 3. The provided artifacts included a pre-generated <code>windows.psscan</code> output (<code>windows.psscan_out.txt</code>), which I grepped through to trace process relationships.</p>
+<p><strong>Tools:</strong> Volatility 3 Framework 2.7.0</p>
+<hr>
+<h2>Q1 — Parent process of the malicious PowerShell</h2>
+<p><strong>Question:</strong> What is the name of the suspicious process that spawned two malicious PowerShell processes?</p>
+<p><strong>Answer:</strong> <code>InvoiceCheckList.exe</code></p>
+<p>I grepped the <code>psscan</code> output for <code>powershell.exe</code> and found two PIDs (6980, 7656), both with parent PID <strong>4596</strong>. Tracing 4596 back through the output shows the parent is <code>InvoiceCheckLi</code> (truncated <code>InvoiceCheckList.exe</code>), PID 4596.</p>
+<pre class="hl"><code>cat windows.psscan_out.txt | grep &quot;powershell.exe&quot;
+cat windows.psscan_out.txt | grep &quot;4596&quot;
+</code></pre>
+<ul>
+<li><code>powershell.exe</code> (6980) → parent 4596</li>
+<li><code>powershell.exe</code> (7656) → parent 4596</li>
+<li><code>InvoiceCheckLi</code> (4596) → parent 3800</li>
+</ul>
+<p><img src="img/psscan.png" alt="psscan process tracing"></p>
+<hr>
+<h2>Q2 — Persistence executable</h2>
+<p><strong>Question:</strong> Which executable is responsible for the malware's persistence?</p>
+<p><strong>Answer:</strong> <code>schtasks.exe</code></p>
+<p>The same parent PID (4596) also spawned <code>schtasks.exe</code> (PID 3512). Use of <code>schtasks</code> indicates the attacker created a scheduled task for persistence.</p>
+<hr>
+<h2>Q3 — Other suspicious child process</h2>
+<p><strong>Question:</strong> Aside from the PowerShell processes, what other active suspicious process originates from the same parent?</p>
+<p><strong>Answer:</strong> <code>RegSvcs.exe</code></p>
+<p>Grepping parent PID 4596 shows multiple <code>RegSvcs.exe</code> instances (PIDs 2816, 4164, 6796, 6448). <code>RegSvcs.exe</code> is a legitimate .NET binary commonly abused for process injection / defense evasion (a LOLBIN).</p>
+<hr>
+<h2>Q4 — Defense-evasion cmdlet</h2>
+<p><strong>Question:</strong> What PowerShell cmdlet was used by the malware for defense evasion?</p>
+<p><strong>Answer:</strong> <code>Add-MpPreference</code></p>
+<p>Extracted with <code>windows.cmdline</code>. <code>Add-MpPreference -ExclusionPath</code> adds a path to Windows Defender's exclusion list so the specified files are skipped during scanning.</p>
+<pre class="hl"><code>vol -f memory.dmp windows.cmdline &gt; cmdline.txt
+cat cmdline.txt | grep &quot;powershell&quot;
+</code></pre>
+<pre class="hl"><code>powershell.exe ... Add-MpPreference -ExclusionPath &quot;C:\Users\Lee\AppData\Local\Temp\InvoiceCheckList.exe&quot;
+powershell.exe ... Add-MpPreference -ExclusionPath &quot;C:\Users\Lee\AppData\Roaming\HcdmIYYf.exe&quot;
+</code></pre>
+<p><img src="img/cmdline.png" alt="cmdline Add-MpPreference exclusions"></p>
+<hr>
+<h2>Q5 — Excluded applications</h2>
+<p><strong>Question:</strong> Which two applications were excluded by the malware from Defender's settings?</p>
+<p><strong>Answer:</strong> <code>InvoiceCheckList.exe</code>, <code>HcdmIYYf.exe</code></p>
+<p>From the two <code>Add-MpPreference -ExclusionPath</code> commands above:</p>
+<ul>
+<li><code>C:\Users\Lee\AppData\Local\Temp\InvoiceCheckList.exe</code></li>
+<li><code>C:\Users\Lee\AppData\Roaming\HcdmIYYf.exe</code></li>
+</ul>
+<hr>
+<h2>Q6 — MITRE ATT&amp;CK sub-technique</h2>
+<p><strong>Question:</strong> What sub-technique ID describes an adversary configuring exempted folders or path exclusions to hide malicious payloads from security inspection?</p>
+<p><strong>Answer:</strong> <code>T1564.012</code> — Hide Artifacts: File/Path Exclusions</p>
+<p>This sub-technique covers hiding file-based artifacts in folders/paths excluded from AV scanning.</p>
+<p><img src="img/t1564-012.png" alt="MITRE ATT&amp;CK T1564.012 File/Path Exclusions"></p>
+<blockquote>
+<p>Note: This overlaps with T1562.001 (Impair Defenses: Disable or Modify Tools), which is where the act of <em>modifying</em> Defender via <code>Add-MpPreference</code> maps. The question's wording (&quot;exempted folders or path exclusions to hide payloads&quot;) points to T1564.012. Confirm against the challenge's accepted answer.</p>
+</blockquote>
+<hr>
+<h2>Q7 — User account</h2>
+<p><strong>Question:</strong> Which user account is linked to the malicious processes?</p>
+<p><strong>Answer:</strong> <code>Lee</code></p>
+<p>The exclusion paths reference <code>C:\Users\Lee\...</code>, confirming the malicious processes ran under the local user <strong>Lee</strong>.</p>
+<hr>
+<h2>Summary</h2>
+<p>An <code>InvoiceCheckList.exe</code> dropper (PID 4596) spawned two PowerShell processes that added Defender exclusions for its payloads (<code>InvoiceCheckList.exe</code>, <code>HcdmIYYf.exe</code>), established persistence via <code>schtasks.exe</code>, and ran <code>RegSvcs.exe</code> for likely injection. All activity executed under user <strong>Lee</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Tactic</th>
+<th>Technique</th>
+<th>Artifact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Execution</td>
+<td>PowerShell</td>
+<td><code>powershell.exe</code> (6980, 7656)</td>
+</tr>
+<tr>
+<td>Defense Evasion</td>
+<td>Impair Defenses / File-Path Exclusions</td>
+<td><code>Add-MpPreference -ExclusionPath</code></td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>Scheduled Task</td>
+<td><code>schtasks.exe</code> (3512)</td>
+</tr>
+<tr>
+<td>Defense Evasion</td>
+<td>LOLBIN abuse</td>
+<td><code>RegSvcs.exe</code></td>
+</tr>
+</tbody>
+</table>
+
+  </article>
+</div>
+<footer><div class="wrap">&copy; <span id="yr"></span> Keenan Morrison</div></footer>
+<script>
+  const r = document.documentElement;
+  const s = localStorage.getItem('theme'); if (s) r.setAttribute('data-theme', s);
+  const t = document.getElementById('toggle');
+  if (t) t.onclick = () => { const n = r.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+  const y = document.getElementById('yr'); if (y) y.textContent = new Date().getFullYear();
+</script>
+<script src="../../assets/blog-search.js"></script>
+</body>
+</html>
